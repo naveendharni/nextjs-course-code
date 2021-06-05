@@ -1,18 +1,13 @@
-import { Fragment } from 'react';
-import { useRouter } from 'next/router';
+import { Fragment } from "react";
 
-import { getEventById } from '../../dummy-data';
-import EventSummary from '../../components/event-detail/event-summary';
-import EventLogistics from '../../components/event-detail/event-logistics';
-import EventContent from '../../components/event-detail/event-content';
-import ErrorAlert from '../../components/ui/error-alert';
+import { getEventById, getFeaturedEvents } from "../../helpers/api-utils";
 
-function EventDetailPage() {
-  const router = useRouter();
+import EventSummary from "../../components/event-detail/event-summary";
+import EventLogistics from "../../components/event-detail/event-logistics";
+import EventContent from "../../components/event-detail/event-content";
+import ErrorAlert from "../../components/ui/error-alert";
 
-  const eventId = router.query.eventId;
-  const event = getEventById(eventId);
-
+function EventDetailPage({ event }) {
   if (!event) {
     return (
       <ErrorAlert>
@@ -35,6 +30,27 @@ function EventDetailPage() {
       </EventContent>
     </Fragment>
   );
+}
+
+export async function getStaticProps(context) {
+  const id = context.params.eventId;
+  const data = await getEventById(id);
+  return {
+    props: {
+      event: data,
+    },
+  };
+}
+
+export async function getStaticPaths() {
+  const featuredEvents = await getFeaturedEvents();
+  const allParams = featuredEvents.map((item) => ({
+    params: { eventId: item.id },
+  }));
+  return {
+    paths: allParams,
+    fallback: "blocking",
+  };
 }
 
 export default EventDetailPage;
